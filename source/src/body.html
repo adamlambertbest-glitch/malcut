@@ -1,0 +1,51 @@
+<style>
+/* Layout: one-column cutting bench; the waveform with its cut marks is the page's centre. */
+:root{--bg:#e9eef1;--fg:#15222b;--muted:#51626e;--panel:#fff;--panel-2:#dfe6fb;--line:#c6d0d6;--accent:#2340c8;--accent-fg:#fff;--cut:#d4286f;--cut-bg:#f9dfea;--ok:#0d6f4f;--err:#b3173f;--font:'IBM Plex Sans KR',system-ui,sans-serif;--mono:'IBM Plex Mono',ui-monospace,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10181e;--fg:#e7eef2;--muted:#9aaab5;--panel:#19242c;--panel-2:#22305e;--line:#2f3e49;--accent:#92a6ff;--accent-fg:#0d1530;--cut:#ff74ac;--cut-bg:#3f1a2c;--ok:#6fd8b2;--err:#ff8ea8;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#10181e;--fg:#e7eef2;--muted:#9aaab5;--panel:#19242c;--panel-2:#22305e;--line:#2f3e49;--accent:#92a6ff;--accent-fg:#0d1530;--cut:#ff74ac;--cut-bg:#3f1a2c;--ok:#6fd8b2;--err:#ff8ea8;color-scheme:dark}
+[hidden]{display:none!important}*{box-sizing:border-box}body{background:var(--bg);color:var(--fg);font-family:var(--font);font-size:16px;line-height:1.55;margin:0}
+.wrap{max-width:880px;margin:auto;padding-block:20px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:16px}
+header{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px}h1{margin:0;font-size:30px;font-weight:700;letter-spacing:-.02em}header p{margin:0;color:var(--muted)}
+.bench{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px;display:grid;gap:14px;min-width:0}
+.pick{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center}.pick>div{min-width:0;flex:1 1 180px}#fileName{font-weight:600;overflow-wrap:anywhere}#fileMeta{color:var(--muted);font-family:var(--mono);font-size:13px}
+button,.btn{appearance:none;font:inherit;font-weight:600;min-height:46px;padding:0 18px;border-radius:5px;border:1.5px solid var(--accent);background:transparent;color:var(--accent);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.primary{background:var(--accent);color:var(--accent-fg)}button:disabled{opacity:.45;cursor:default}:focus-visible{outline:3px solid var(--cut);outline-offset:2px}
+input[type=file]{position:absolute;width:1px;height:1px;opacity:0}
+.waveWrap{position:relative;border-radius:4px;overflow:hidden}canvas{display:block;width:100%;height:150px;cursor:pointer}
+#demoTag{position:absolute;left:8px;top:8px;background:var(--panel);color:var(--muted);font-size:13px;padding:2px 8px;border-radius:3px}
+.legend{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:14px;color:var(--muted)}.legend i{display:inline-block;width:12px;height:12px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}@media(max-width:560px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}.stats div{min-width:0}.stats dt{font-size:13px;color:var(--muted)}.stats dd{margin:0;font-size:21px;font-weight:700;font-variant-numeric:tabular-nums}
+dl{margin:0}video{width:100%;max-height:300px;background:#000;border-radius:4px;display:block}.check{display:flex;gap:8px;align-items:center;min-height:44px;font-size:15px}.check input{width:22px;height:22px;accent-color:var(--accent)}
+.knobs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 22px}@media(max-width:560px){.knobs{grid-template-columns:1fr}}.knob{min-width:0}.knob label{display:flex;justify-content:space-between;gap:8px;font-weight:600;font-size:15px}.knob output{font-family:var(--mono);font-weight:500;color:var(--accent)}.knob small{display:block;color:var(--muted);font-size:13px}input[type=range]{width:100%;height:36px;accent-color:var(--accent);margin:0}
+.locked .knobs,.locked .hear{opacity:.5;pointer-events:none}
+.hear{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.hear span{font-size:14px;color:var(--muted);flex-basis:100%}.hear button{flex:1 1 140px}
+.go{display:flex;flex-wrap:wrap;gap:10px}.go button{flex:1 1 200px}
+#progressWrap{display:grid;gap:6px}.track{height:8px;background:var(--line);border-radius:4px;overflow:hidden}#bar{height:100%;width:0;background:var(--accent)}#progLabel{font-family:var(--mono);font-size:14px}
+#status{min-height:1.5em;font-size:15px;color:var(--muted)}#status[data-kind=ok]{color:var(--ok)}#status[data-kind=err]{color:var(--err);font-weight:600}
+#resultBox{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;border-top:1px solid var(--line);padding-top:14px}#resultBox[hidden]{display:none!important}#resultBox>div{flex:1 1 180px}#resultMeta{color:var(--muted);font-family:var(--mono);font-size:14px}
+footer{color:var(--muted);font-size:14px}
+</style>
+<div class="wrap">
+<header><h1>말컷</h1><p>말 없는 구간을 자르고 배경 소리를 줄여요.</p></header>
+<main class="bench">
+ <div class="pick"><label class="btn primary" for="file">영상 고르기</label><input id="file" type="file" accept="video/*,.mp4,.mov,.webm,.mkv"><div><div id="fileName">아직 고른 영상이 없어요</div><div id="fileMeta">영상은 이 기기 안에서만 처리돼요</div></div></div>
+ <div id="status" role="status" aria-live="polite"></div>
+ <div id="progressWrap" hidden><div class="track"><div id="bar"></div></div><div id="progLabel"></div></div>
+ <div class="waveWrap"><canvas id="wave" aria-label="소리 파형. 남는 구간과 잘리는 구간을 표시해요"></canvas><span id="demoTag">예시 화면</span></div>
+ <div class="legend"><span><i style="background:var(--accent)"></i>남는 구간</span><span><i style="background:var(--cut)"></i>잘리는 구간</span></div>
+ <dl class="stats"><div><dt>원래 길이</dt><dd id="statBefore">–</dd></div><div><dt>자른 뒤</dt><dd id="statAfter">–</dd></div><div><dt>자르는 곳</dt><dd id="statCuts">–</dd></div><div><dt>줄어드는 비율</dt><dd id="statSaved">–</dd></div></dl>
+ <section id="controls" hidden style="display:grid;gap:14px">
+  <div id="playerWrap" hidden><video id="player" controls playsinline></video><label class="check"><input id="skipCuts" type="checkbox" checked>재생할 때 잘리는 구간 건너뛰기</label></div>
+  <div class="knobs">
+   <div class="knob"><label for="sens">말소리 감지 민감도<output id="sensVal">50</output></label><input id="sens" type="range" min="0" max="100" value="50"><small>작은 말소리가 잘리면 높이세요.</small></div>
+   <div class="knob"><label for="gap">이보다 긴 침묵만 자르기<output id="gapVal">0.6초</output></label><input id="gap" type="range" min="2" max="30" value="6"><small>말 사이가 너무 빡빡하면 늘리세요.</small></div>
+   <div class="knob"><label for="pad">말 앞뒤 여유<output id="padVal">0.12초</output></label><input id="pad" type="range" min="0" max="500" step="10" value="120"><small>말끝이 잘리면 늘리세요.</small></div>
+   <div class="knob"><label for="noise">배경 소리 줄이기<output id="noiseVal">보통</output></label><input id="noise" type="range" min="0" max="100" value="50"><small>목소리가 어색해지면 낮추세요.</small></div>
+  </div>
+  <div class="hear"><span>말소리가 있는 8초를 들려드려요.</span><button id="hearOrig">원본 듣기</button><button id="hearClean">줄인 소리 듣기</button></div>
+  <div class="go"><button id="export" class="primary">영상 만들기</button><button id="cancel" hidden>취소</button></div>
+ </section>
+ <div id="resultBox" hidden><div><strong>완성</strong><div id="resultMeta"></div></div><button id="save" class="primary">영상 저장하기</button></div>
+</main>
+<footer>화면이 꺼지거나 앱을 벗어나면 처리가 멈출 수 있어요. 영상은 서버로 전송되지 않아요.</footer>
+</div>
